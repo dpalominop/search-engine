@@ -1,6 +1,26 @@
 version: "3"
 
 services:
+  api:
+    build:
+      context: api
+      dockerfile: docker/Dockerfile.api
+      args:
+        base_image_tag: "base-gpu-local"
+        base_image: "deepset/haystack"
+    ports:
+      - 8000:8000
+    healthcheck:
+        test: curl --fail http://localhost:8000/health || exit 1
+        interval: 10s
+        timeout: 1s
+        retries: 10
+    networks:
+      search_engine_net:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
   elasticsearch:
     image: "docker.elastic.co/elasticsearch/elasticsearch:7.17.6"
     ports:
@@ -14,3 +34,8 @@ services:
         interval: 10s
         timeout: 1s
         retries: 10
+    networks:
+      search_engine_net:
+
+networks:
+  search_engine_net:
