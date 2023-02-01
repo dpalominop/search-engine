@@ -1,10 +1,102 @@
 version: "3"
 
 services:
+  broker:
+    container_name: celery-broker
+    image: rabbitmq:3.8.18-management-alpine
+    ports:
+      - 8080:15672
+      - 5672:5672
+    networks:
+      search_engine_net:
+
+  backend:
+    container_name: celery-backend
+    image: redis:6.2.4
+    ports:
+      - 6379:6379
+    networks:
+      search_engine_net:
+    command: redis-server --requirepass password
+  
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.17.6"
+    container_name: elasticsearch
+    ports:
+      - 9200:9200
+    restart: on-failure
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    healthcheck:
+        test: curl --fail http://localhost:9200/_cat/health || exit 1
+        interval: 10s
+        timeout: 1s
+        retries: 10
+    networks:
+      search_engine_net:
+
+  indexer:
+    build:
+      context: indexer
+      dockerfile: docker/Dockerfile
+      args:
+        base_image_tag: "base-gpu-local"
+        base_image: "deepset/haystack"
+    container_name: indexer
+    env_file:
+      - 'variables.env'
+    environment:
+      - BUCKET_NAME=document-tasks
+      - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
+      - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_dpr.haystack-pipeline.yml
+    links:
+      - backend:backend
+      - broker:broker
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - search_engine_net
+
+    command: celery worker -A src.worker.indexer -P threads --loglevel=INFO --queues=indexer
+
+  api:
+    build:
+      context: api
+      dockerfile: docker/Dockerfile.api
+      args:
+        base_image_tag: "base-gpu-local"
+        base_image: "deepset/haystack"
+    container_name: api
+    env_file:
+      - 'variables.env'
+    ports:
+      - 8000:8000
+    restart: on-failure
+    environment:
+      - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
+      - PIPELINE_YAML_PATH=/opt/venv/lib/python3.10/site-packages/rest_api/pipeline/pipelines_dpr.haystack-pipeline.yml
+      - BUCKET_NAME=document-tasks
+    links:
+      - backend:backend
+      - broker:broker
+    healthcheck:
+        test: curl --fail http://localhost:8000/health || exit 1
+        interval: 10s
+        timeout: 1s
+        retries: 10
+    networks:
+      search_engine_net:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
   ui:
     build:
       context: ui
       dockerfile: docker/Dockerfile
+    container_name: ui
     ports:
       - 8501:8501
     restart: on-failure
@@ -21,45 +113,15 @@ services:
     networks:
       search_engine_net:
 
-  api:
-    build:
-      context: api
-      dockerfile: docker/Dockerfile.api
-      args:
-        base_image_tag: "base-gpu-local"
-        base_image: "deepset/haystack"
-    ports:
-      - 8000:8000
-    restart: on-failure
-    environment:
-      - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
-      - PIPELINE_YAML_PATH=/opt/venv/lib/python3.10/site-packages/rest_api/pipeline/pipelines_dpr.haystack-pipeline.yml
-    healthcheck:
-        test: curl --fail http://localhost:8000/health || exit 1
-        interval: 10s
-        timeout: 1s
-        retries: 10
-    networks:
-      search_engine_net:
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-
-  elasticsearch:
-    image: "docker.elastic.co/elasticsearch/elasticsearch:7.17.6"
-    ports:
-      - 9200:9200
-    restart: on-failure
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
-    healthcheck:
-        test: curl --fail http://localhost:9200/_cat/health || exit 1
-        interval: 10s
-        timeout: 1s
-        retries: 10
-    networks:
-      search_engine_net:
-
+  # localstack:
+  #   image: localstack/localstack:0.12.13
+  #   environment:
+  #     SERVICES: s3
+  #     DATA_DIR: /tmp/localstack/data
+  #   volumes:
+  #     - './data/documents:/tmp/localstack/dataset'
+  #     - './localstack:/docker-entrypoint-initaws.d'
+  #   networks:
+  #     search_engine_net:
 networks:
   search_engine_net:
