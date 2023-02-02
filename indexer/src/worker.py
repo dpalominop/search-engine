@@ -57,7 +57,7 @@ def indexer_task(self, **kwargs) -> Dict[str, Any]:
         file_path = Path(FILE_UPLOAD_PATH) / f"{uuid.uuid4().hex}_{filename}"
         with file_path.open("wb") as buffer:
             # shutil.copyfileobj(base64.b64decode(file), buffer)
-            buffer.write(file)
+            buffer.write(base64.b64decode(file.encode('utf-8')))
 
         file_paths.append(file_path)
         meta_form["name"] = filename
