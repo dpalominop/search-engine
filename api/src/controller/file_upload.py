@@ -1,10 +1,7 @@
 import os
 from typing import Optional, List
 
-# import json
-# import shutil
-# import uuid
-# from pathlib import Path
+import logging
 import base64
 
 from celery import Celery, states
@@ -12,9 +9,12 @@ from fastapi import FastAPI, APIRouter, UploadFile, File, Form, Depends
 from pydantic import BaseModel
 
 from src.utils import get_app
-from src.config import BROKER_URL, REDIS_URL
+from src.config import BROKER_URL, REDIS_URL, LOG_LEVEL
 from src.controller.utils import as_form
 
+
+logging.getLogger("haystack").setLevel(LOG_LEVEL)
+logger = logging.getLogger("haystack")
 
 router = APIRouter()
 app: FastAPI = get_app()
@@ -53,6 +53,7 @@ def upload_file(
     """
     Upload files for indexing.
     """
+    logging.info(f"Preparing documents for indexing.")
     enc_files = []
     for file in files:
         try:
@@ -66,6 +67,9 @@ def upload_file(
                "meta": meta,
                "fileconverter_params": fileconverter_params.dict(), 
                "preprocessor_params": preprocessor_params.dict()}
-
+    
+    logging.info(f"Sending {len(files)} documents to indexing task.")
     task = tasks.send_task(name="indexing", kwargs=payload, queue="indexer")
+    logging.info(f"Indexing task sent.")
+
     return {"task_id": task.id}
