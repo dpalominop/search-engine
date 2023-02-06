@@ -28,6 +28,8 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - ELASTIC_USERNAME=changeme
+      - ELASTIC_PASSWORD=changeme
     healthcheck:
         test: curl --fail http://localhost:9200/_cat/health || exit 1
         interval: 10s
@@ -47,9 +49,11 @@ services:
     env_file:
       - 'variables.env'
     environment:
-      - BUCKET_NAME=document-tasks
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
+      - DOCUMENTSTORE_PARAMS_USERNAME=changeme
+      - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
       - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_dpr.haystack-pipeline.yml
+      - BUCKET_NAME=document-tasks
     links:
       - backend:backend
       - broker:broker
@@ -76,7 +80,9 @@ services:
     restart: on-failure
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
-      - PIPELINE_YAML_PATH=/opt/venv/lib/python3.10/site-packages/rest_api/pipeline/pipelines_dpr.haystack-pipeline.yml
+      - DOCUMENTSTORE_PARAMS_USERNAME=changeme
+      - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
+      - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_dpr.haystack-pipeline.yml
       - BUCKET_NAME=document-tasks
     links:
       - backend:backend
