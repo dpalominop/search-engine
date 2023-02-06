@@ -7,7 +7,6 @@ import base64
 from pathlib import Path
 from typing import Any, Dict, List
 
-# import s3fs
 from celery import Celery, states
 from celery.exceptions import Ignore
 from celery.utils.log import get_logger
@@ -17,14 +16,6 @@ from haystack.nodes import BaseConverter, PreProcessor
 from src.utils import get_pipelines
 from src.config import FILE_UPLOAD_PATH
 
-# import albumentations as A
-# import cv2
-
-# from app.database import filter_products
-
-# BUCKET_NAME = os.getenv("BUCKET_NAME", "")
-# DATA_FOLDER = os.getenv("DATA_FOLDER", "")
-# S3_HOST = os.getenv("S3_HOST", "")
 
 logger = get_logger(__name__)
 indexer = Celery(
@@ -57,7 +48,7 @@ def indexer_task(self, **kwargs) -> Dict[str, Any]:
         file_path = Path(FILE_UPLOAD_PATH) / f"{uuid.uuid4().hex}_{filename}"
         with file_path.open("wb") as buffer:
             # shutil.copyfileobj(base64.b64decode(file), buffer)
-            buffer.write(base64.b64decode(file.encode('utf-8')))
+            buffer.write(base64.decodebytes(file.encode('utf-8')))
 
         file_paths.append(file_path)
         meta_form["name"] = filename
