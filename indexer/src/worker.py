@@ -44,17 +44,13 @@ def indexer_task(self, **kwargs) -> Dict[str, Any]:
     #     raise HTTPException(status_code=500, detail=f"The meta field must be a dict or None, not {type(meta_form)}")
 
     for file, filename in zip(kwargs["files"], kwargs["filenames"]):
-        # try:
         file_path = Path(FILE_UPLOAD_PATH) / f"{uuid.uuid4().hex}_{filename}"
         with file_path.open("wb") as buffer:
-            # shutil.copyfileobj(base64.b64decode(file), buffer)
             buffer.write(base64.decodebytes(file.encode('utf-8')))
 
         file_paths.append(file_path)
         meta_form["name"] = filename
         file_metas.append(meta_form)
-        # finally:
-        #     file.file.close()
 
     # Find nodes names
     converters = indexing_pipeline.get_nodes_by_class(BaseConverter)
@@ -68,4 +64,4 @@ def indexer_task(self, **kwargs) -> Dict[str, Any]:
 
     indexing_pipeline.run(file_paths=file_paths, meta=file_metas, params=params)
 
-    # return {"s3_target": s3_target}
+    return {"file_paths": file_paths, "meta": file_metas, "params": params}
