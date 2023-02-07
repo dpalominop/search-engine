@@ -1,23 +1,24 @@
+import os
 from typing import Optional, List
 
-import json
-import shutil
-import uuid
-from pathlib import Path
+import logging
+import base64
 
-from fastapi import FastAPI, APIRouter, UploadFile, File, Form, HTTPException, Depends
+from celery import Celery, states
+from fastapi import FastAPI, APIRouter, UploadFile, File, Form, Depends
 from pydantic import BaseModel
-from haystack import Pipeline
-from haystack.nodes import BaseConverter, PreProcessor
 
-from src.utils import get_app, get_pipelines
-from src.config import FILE_UPLOAD_PATH
+from src.utils import get_app
+from src.config import BROKER_URL, REDIS_URL, LOG_LEVEL
 from src.controller.utils import as_form
 
 
+logging.getLogger("haystack").setLevel(LOG_LEVEL)
+logger = logging.getLogger("haystack")
+
 router = APIRouter()
 app: FastAPI = get_app()
-indexing_pipeline: Pipeline = get_pipelines().get("indexing_pipeline", None)
+tasks = Celery(broker=BROKER_URL, backend=REDIS_URL)
 
 
 @as_form
@@ -50,39 +51,25 @@ def upload_file(
     preprocessor_params: PreprocessorParams = Depends(PreprocessorParams.as_form),  # type: ignore
 ):
     """
-    You can use this endpoint to upload a file for indexing
-    (see https://haystack.deepset.ai/guides/rest-api#indexing-documents-in-the-haystack-rest-api-document-store).
+    Upload files for indexing.
     """
-    if not indexing_pipeline:
-        raise HTTPException(status_code=501, detail="Indexing Pipeline is not configured.")
-
-    file_paths: list = []
-    file_metas: list = []
-
-    meta_form = json.loads(meta) or {}  # type: ignore
-    if not isinstance(meta_form, dict):
-        raise HTTPException(status_code=500, detail=f"The meta field must be a dict or None, not {type(meta_form)}")
-
+    logging.info(f"Preparing documents for indexing.")
+    enc_files = []
     for file in files:
         try:
-            file_path = Path(FILE_UPLOAD_PATH) / f"{uuid.uuid4().hex}_{file.filename}"
-            with file_path.open("wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-
-            file_paths.append(file_path)
-            meta_form["name"] = file.filename
-            file_metas.append(meta_form)
+            enc_file = base64.b64encode(file.file.read()).decode('utf-8')
+            enc_files.append(enc_file)
         finally:
             file.file.close()
+        
+    payload = {"files": [enc_file for enc_file in enc_files], 
+               "filenames": [file.filename for file in files], 
+               "meta": meta,
+               "fileconverter_params": fileconverter_params.dict(), 
+               "preprocessor_params": preprocessor_params.dict()}
+    
+    logging.info(f"Sending {len(files)} documents to indexing task.")
+    task = tasks.send_task(name="indexing", kwargs=payload, queue="indexer")
+    logging.info(f"Indexing task sent.")
 
-    # Find nodes names
-    converters = indexing_pipeline.get_nodes_by_class(BaseConverter)
-    preprocessors = indexing_pipeline.get_nodes_by_class(PreProcessor)
-
-    params = {}
-    for converter in converters:
-        params[converter.name] = fileconverter_params.dict()
-    for preprocessor in preprocessors:
-        params[preprocessor.name] = preprocessor_params.dict()
-
-    indexing_pipeline.run(file_paths=file_paths, meta=file_metas, params=params)
+    return {"task_id": task.id}

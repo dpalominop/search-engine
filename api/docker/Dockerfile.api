@@ -22,6 +22,12 @@ ENV FILE_UPLOAD_PATH="/opt/file-upload"
 
 ENV TIKA_LOG_PATH="/var/log/$SERVICE_NAME/"
 
+COPY /requirements.txt /tmp/requirements.txt
+
+RUN apt-get update -yqq && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --compile -r /tmp/requirements.txt
+
 EXPOSE 8000
 
 USER $SERVICE_NAME
