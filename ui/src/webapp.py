@@ -11,8 +11,8 @@ from src.utils import haystack_is_ready, query, send_feedback, upload_doc, hayst
 
 
 # Adjust to a question that you would like users to see in the search bar when they load the UI:
-DEFAULT_QUESTION_AT_STARTUP = os.getenv("DEFAULT_QUESTION_AT_STARTUP", "What's the capital of France?")
-DEFAULT_ANSWER_AT_STARTUP = os.getenv("DEFAULT_ANSWER_AT_STARTUP", "Paris")
+DEFAULT_QUESTION_AT_STARTUP = os.getenv("DEFAULT_QUESTION_AT_STARTUP", "Write a question ...")
+DEFAULT_ANSWER_AT_STARTUP = os.getenv("DEFAULT_ANSWER_AT_STARTUP", "")
 
 # Sliders
 DEFAULT_DOCS_FROM_RETRIEVER = int(os.getenv("DEFAULT_DOCS_FROM_RETRIEVER", "3"))
@@ -124,7 +124,7 @@ def main():
         label_visibility="hidden",
     )
     col1, _ = st.columns(2)
-    col1.markdown("<style>.stButton button {width:50%;}</style>", unsafe_allow_html=True)
+    col1.markdown("<style>.stButton button {width:50%; left:50%}</style>", unsafe_allow_html=True)
 
     # Run button
     run_pressed = col1.button("Run")
@@ -147,8 +147,6 @@ def main():
 
         with st.spinner(
             "🧠 &nbsp;&nbsp; Performing neural search on documents... \n "
-            "Do you want to optimize speed or accuracy? \n"
-            "Check out the docs: https://haystack.deepset.ai/usage/optimization "
         ):
             try:
                 st.session_state.results, st.session_state.raw_json = query(
