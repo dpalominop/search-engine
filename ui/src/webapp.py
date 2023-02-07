@@ -1,7 +1,5 @@
 import os
-import sys
 import logging
-from pathlib import Path
 from json import JSONDecodeError
 
 import pandas as pd
@@ -20,9 +18,6 @@ DEFAULT_ANSWER_AT_STARTUP = os.getenv("DEFAULT_ANSWER_AT_STARTUP", "Paris")
 DEFAULT_DOCS_FROM_RETRIEVER = int(os.getenv("DEFAULT_DOCS_FROM_RETRIEVER", "3"))
 DEFAULT_NUMBER_OF_ANSWERS = int(os.getenv("DEFAULT_NUMBER_OF_ANSWERS", "3"))
 
-# Labels for the evaluation
-EVAL_LABELS = os.getenv("EVAL_FILE", str(Path(__file__).parent / "eval_labels_example.csv"))
-
 # Whether the file upload should be enabled or not
 DISABLE_FILE_UPLOAD = bool(os.getenv("DISABLE_FILE_UPLOAD"))
 
@@ -34,14 +29,13 @@ def set_state_if_absent(key, value):
 
 def main():
 
-    st.set_page_config(page_title="Haystack Demo", page_icon="https://haystack.deepset.ai/img/HaystackIcon.png")
+    st.set_page_config(page_title="Search Engine PoC")
 
     # Persistent state
     set_state_if_absent("question", DEFAULT_QUESTION_AT_STARTUP)
     set_state_if_absent("answer", DEFAULT_ANSWER_AT_STARTUP)
     set_state_if_absent("results", None)
     set_state_if_absent("raw_json", None)
-    set_state_if_absent("random_question_requested", False)
 
     # Small callback to reset the interface in case the text of the question changes
     def reset_results(*args):
@@ -50,14 +44,9 @@ def main():
         st.session_state.raw_json = None
 
     # Title
-    st.write("# Haystack Demo - Explore the world")
+    st.write("# Search Engine PoC")
     st.markdown(
         """
-This demo takes its data from a selection of Wikipedia pages crawled in November 2021 on the topic of
-
-<h3 style='text-align:center;padding: 0 0 1rem;'>Countries and capital cities</h3>
-
-Ask any question on this topic and see if Haystack can find the correct answer to your query!
 
 *Note: do not use keywords, but full-fledged questions.* The demo is not optimized to deal with keyword queries and might misunderstand you.
 """,
@@ -91,20 +80,19 @@ Ask any question on this topic and see if Haystack can find the correct answer t
         data_files = st.sidebar.file_uploader(
             "upload", type=["pdf", "txt", "docx"], accept_multiple_files=True, label_visibility="hidden"
         )
-        for data_file in data_files:
-            # Upload file
-            if data_file:
-                raw_json = upload_doc(data_file)
-                st.sidebar.write(str(data_file.name) + " &nbsp;&nbsp; ✅ ")
-                if debug:
-                    st.subheader("REST API JSON response")
-                    st.sidebar.write(raw_json)
 
-    hs_version = ""
-    try:
-        hs_version = f" <small>(v{haystack_version()})</small>"
-    except Exception:
-        pass
+        index_pressed = st.sidebar.button("Index")
+        if index_pressed:
+            for data_file in data_files:
+                # Upload file
+                if data_file:
+                    raw_json = upload_doc(data_file)
+                    st.sidebar.write(str(data_file.name) + " &nbsp;&nbsp; ✅ ")
+                    if debug:
+                        st.subheader("REST API JSON response")
+                        st.sidebar.write(raw_json)
+                        
+            data_files = []
 
     st.sidebar.markdown(
         f"""
@@ -123,26 +111,9 @@ Ask any question on this topic and see if Haystack can find the correct answer t
             opacity: 0;
         }}
     </style>
-    <div class="haystack-footer">
-        <hr />
-        <h4>Built with <a href="https://www.deepset.ai/haystack">Haystack</a>{hs_version}</h4>
-        <p>Get it on <a href="https://github.com/deepset-ai/haystack/">GitHub</a> &nbsp;&nbsp; - &nbsp;&nbsp; Read the <a href="https://haystack.deepset.ai/overview/intro">Docs</a></p>
-        <small>Data crawled from <a href="https://en.wikipedia.org/wiki/Category:Lists_of_countries_by_continent">Wikipedia</a> in November 2021.<br />See the <a href="https://creativecommons.org/licenses/by-sa/3.0/">License</a> (CC BY-SA 3.0).</small>
-    </div>
     """,
         unsafe_allow_html=True,
     )
-
-    # Load csv into pandas dataframe
-    try:
-        df = pd.read_csv(EVAL_LABELS, sep=";")
-    except Exception:
-        st.error(
-            f"The eval file was not found. Please check the demo's [README](https://github.com/deepset-ai/haystack/tree/main/ui/README.md) for more information."
-        )
-        sys.exit(
-            f"The eval file was not found under `{EVAL_LABELS}`. Please check the README (https://github.com/deepset-ai/haystack/tree/main/ui/README.md) for more information."
-        )
 
     # Search bar
     question = st.text_input(
@@ -152,43 +123,20 @@ Ask any question on this topic and see if Haystack can find the correct answer t
         label="question",
         label_visibility="hidden",
     )
-    col1, col2 = st.columns(2)
-    col1.markdown("<style>.stButton button {width:100%;}</style>", unsafe_allow_html=True)
-    col2.markdown("<style>.stButton button {width:100%;}</style>", unsafe_allow_html=True)
+    col1, _ = st.columns(2)
+    col1.markdown("<style>.stButton button {width:50%;}</style>", unsafe_allow_html=True)
 
     # Run button
     run_pressed = col1.button("Run")
 
-    # Get next random question from the CSV
-    if col2.button("Random question"):
-        reset_results()
-        new_row = df.sample(1)
-        while (
-            new_row["Question Text"].values[0] == st.session_state.question
-        ):  # Avoid picking the same question twice (the change is not visible on the UI)
-            new_row = df.sample(1)
-        st.session_state.question = new_row["Question Text"].values[0]
-        st.session_state.answer = new_row["Answer"].values[0]
-        st.session_state.random_question_requested = True
-        # Re-runs the script setting the random question as the textbox value
-        # Unfortunately necessary as the Random Question button is _below_ the textbox
-        if hasattr(st, "scriptrunner"):
-            raise st.scriptrunner.script_runner.RerunException(
-                st.scriptrunner.script_requests.RerunData(widget_states=None)
-            )
-        raise st.runtime.scriptrunner.script_runner.RerunException(
-            st.runtime.scriptrunner.script_requests.RerunData(widget_states=None)
-        )
-    st.session_state.random_question_requested = False
-
     run_query = (
         run_pressed or question != st.session_state.question
-    ) and not st.session_state.random_question_requested
+    )
 
     # Check the connection
-    with st.spinner("⌛️ &nbsp;&nbsp; Haystack is starting..."):
+    with st.spinner("⌛️ &nbsp;&nbsp; App is starting..."):
         if not haystack_is_ready():
-            st.error("🚫 &nbsp;&nbsp; Connection Error. Is Haystack running?")
+            st.error("🚫 &nbsp;&nbsp; Connection Error. Is Backend running?")
             run_query = False
             reset_results()
 
