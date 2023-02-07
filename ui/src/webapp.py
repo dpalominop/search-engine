@@ -122,14 +122,14 @@ def main():
         label="question",
         label_visibility="hidden",
     )
-    col1, _ = st.columns(2)
-    col1.markdown("<style>.stButton button {width:50%; left:50%}</style>", unsafe_allow_html=True)
+    col1 = st.columns(1)[0]
+    col1.markdown("<style>.stButton button {width:50%; margin:0 auto; display:block;}</style>", unsafe_allow_html=True)
 
     # Run button
-    run_pressed = col1.button("Run")
+    search_pressed = col1.button("Search")
 
     run_query = (
-        run_pressed or question != st.session_state.question
+        search_pressed or question != st.session_state.question
     )
 
     # Check the connection
