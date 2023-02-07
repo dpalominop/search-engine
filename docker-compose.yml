@@ -52,7 +52,7 @@ services:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=changeme
       - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
-      - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_dpr.haystack-pipeline.yml
+      - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_indexer.yml
       - BUCKET_NAME=document-tasks
     links:
       - backend:backend
@@ -82,7 +82,7 @@ services:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=changeme
       - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
-      - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_dpr.haystack-pipeline.yml
+      - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_retriever.yml
       - BUCKET_NAME=document-tasks
     links:
       - backend:backend
