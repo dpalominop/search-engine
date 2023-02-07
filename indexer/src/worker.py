@@ -64,4 +64,4 @@ def indexer_task(self, **kwargs) -> Dict[str, Any]:
 
     indexing_pipeline.run(file_paths=file_paths, meta=file_metas, params=params)
 
-    return {"file_paths": file_paths, "meta": file_metas, "params": params}
+    return {"file_paths": [str(f) for f in file_paths], "meta": file_metas, "params": params}
