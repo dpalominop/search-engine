@@ -57,12 +57,6 @@ def setup_pipelines() -> Dict[str, Any]:
     logging.info("Concurrent requests per worker: %s", config.CONCURRENT_REQUEST_PER_WORKER)
     pipelines["concurrency_limiter"] = concurrency_limiter
 
-    # Load indexing pipeline
-    index_pipeline, _ = _load_pipeline(config.PIPELINE_YAML_PATH, config.INDEXING_PIPELINE_NAME)
-    if not index_pipeline:
-        logger.warning("Indexing Pipeline is not setup. File Upload API will not be available.")
-    pipelines["indexing_pipeline"] = index_pipeline
-
     # Create directory for uploaded files
     os.makedirs(config.FILE_UPLOAD_PATH, exist_ok=True)
 
