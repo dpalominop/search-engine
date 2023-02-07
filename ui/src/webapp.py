@@ -2,7 +2,6 @@ import os
 import logging
 from json import JSONDecodeError
 
-import pandas as pd
 import streamlit as st
 from annotated_text import annotation
 from markdown import markdown
