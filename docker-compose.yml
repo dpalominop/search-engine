@@ -3,7 +3,7 @@ version: "3"
 services:
   broker:
     container_name: celery-broker
-    image: rabbitmq:3.8.18-management-alpine
+    image: rabbitmq:management-alpine
     ports:
       - 8080:15672
       - 5672:5672
@@ -20,7 +20,7 @@ services:
     command: redis-server --requirepass password
   
   elasticsearch:
-    image: "docker.elastic.co/elasticsearch/elasticsearch:7.17.6"
+    image: "elasticsearch:7.17.6"
     container_name: elasticsearch
     ports:
       - 9200:9200
@@ -43,7 +43,7 @@ services:
       context: indexer
       dockerfile: docker/Dockerfile
       args:
-        base_image_tag: "base-gpu-local"
+        base_image_tag: "base-gpu-v1.13.2"
         base_image: "deepset/haystack"
     container_name: indexer
     env_file:
@@ -70,7 +70,7 @@ services:
       context: api
       dockerfile: docker/Dockerfile.api
       args:
-        base_image_tag: "base-gpu-local"
+        base_image_tag: "base-gpu-v1.13.2"
         base_image: "deepset/haystack"
     container_name: api
     env_file:
