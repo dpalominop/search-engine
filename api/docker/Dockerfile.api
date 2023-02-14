@@ -25,6 +25,7 @@ ENV TIKA_LOG_PATH="/var/log/$SERVICE_NAME/"
 COPY /requirements.txt /tmp/requirements.txt
 
 RUN apt-get update -yqq && \
+    apt-get -y install curl && \
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --compile -r /tmp/requirements.txt
 

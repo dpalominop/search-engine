@@ -3,7 +3,7 @@ version: "3"
 services:
   broker:
     container_name: celery-broker
-    image: rabbitmq:3.8.18-management-alpine
+    image: rabbitmq:management-alpine
     ports:
       - 8080:15672
       - 5672:5672
@@ -20,7 +20,7 @@ services:
     command: redis-server --requirepass password
   
   elasticsearch:
-    image: "docker.elastic.co/elasticsearch/elasticsearch:7.17.6"
+    image: "elasticsearch:7.17.6"
     container_name: elasticsearch
     ports:
       - 9200:9200
@@ -28,10 +28,10 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
-      - ELASTIC_USERNAME=changeme
+      - xpack.security.enabled=true
       - ELASTIC_PASSWORD=changeme
     healthcheck:
-        test: curl --fail http://localhost:9200/_cat/health || exit 1
+        test: curl --fail --user elastic:changeme http://localhost:9200/_cat/health || exit 1
         interval: 10s
         timeout: 1s
         retries: 10
@@ -43,14 +43,14 @@ services:
       context: indexer
       dockerfile: docker/Dockerfile
       args:
-        base_image_tag: "base-gpu-local"
+        base_image_tag: "base-cpu-v1.13.2"
         base_image: "deepset/haystack"
     container_name: indexer
     env_file:
       - 'variables.env'
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
-      - DOCUMENTSTORE_PARAMS_USERNAME=changeme
+      - DOCUMENTSTORE_PARAMS_USERNAME=elastic
       - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
       - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_indexer.yml
       - BUCKET_NAME=document-tasks
@@ -70,7 +70,7 @@ services:
       context: api
       dockerfile: docker/Dockerfile.api
       args:
-        base_image_tag: "base-gpu-local"
+        base_image_tag: "base-cpu-v1.13.2"
         base_image: "deepset/haystack"
     container_name: api
     env_file:
@@ -80,7 +80,7 @@ services:
     restart: on-failure
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
-      - DOCUMENTSTORE_PARAMS_USERNAME=changeme
+      - DOCUMENTSTORE_PARAMS_USERNAME=elastic
       - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
       - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_retriever.yml
       - BUCKET_NAME=document-tasks
@@ -89,8 +89,8 @@ services:
       - broker:broker
     healthcheck:
         test: curl --fail http://localhost:8000/health || exit 1
-        interval: 10s
-        timeout: 1s
+        interval: 30s
+        timeout: 10s
         retries: 10
     networks:
       search_engine_net:
@@ -116,6 +116,9 @@ services:
       - DEFAULT_DOCS_FROM_RETRIEVER
       - DEFAULT_NUMBER_OF_ANSWERS
     command: "/bin/bash -c 'sleep 15 && python -m streamlit run src/webapp.py'"
+    depends_on:
+      api:
+        condition: service_healthy
     networks:
       search_engine_net:
 
