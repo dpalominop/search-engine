@@ -1,4 +1,3 @@
-import os
 from typing import Optional, List
 
 import logging
@@ -11,7 +10,6 @@ from pydantic import BaseModel
 from src.utils import get_app
 from src.config import BROKER_URL, REDIS_URL, LOG_LEVEL
 from src.controller.utils import as_form
-
 
 logging.getLogger("haystack").setLevel(LOG_LEVEL)
 logger = logging.getLogger("haystack")
@@ -53,11 +51,13 @@ def upload_file(
     """
     Upload files for indexing.
     """
-    logging.info(f"Preparing documents for indexing.")
+    logger.info(f"Preparing documents for indexing.")
+
     enc_files = []
     for file in files:
         try:
-            enc_file = base64.b64encode(file.file.read()).decode('utf-8')
+            file_binary = file.file.read()
+            enc_file = base64.b64encode(file_binary).decode('utf-8')
             enc_files.append(enc_file)
         finally:
             file.file.close()
@@ -68,8 +68,8 @@ def upload_file(
                "fileconverter_params": fileconverter_params.dict(), 
                "preprocessor_params": preprocessor_params.dict()}
     
-    logging.info(f"Sending {len(files)} documents to indexing task.")
+    logger.info(f"Sending {len(files)} documents to indexing task.")
     task = tasks.send_task(name="indexing", kwargs=payload, queue="indexer")
-    logging.info(f"Indexing task sent.")
+    logger.info(f"Indexing task sent.")
 
     return {"task_id": task.id}
