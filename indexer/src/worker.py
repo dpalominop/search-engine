@@ -4,6 +4,7 @@ import uuid
 import base64
 from pathlib import Path
 from typing import Any, Dict, List
+import tempfile
 import s3fs
 
 from celery import Celery, states
@@ -55,8 +56,11 @@ def indexer_task(self, **kwargs) -> Dict[str, Any]:
     # if not isinstance(meta_form, dict):
     #     raise HTTPException(status_code=500, detail=f"The meta field must be a dict or None, not {type(meta_form)}")
 
+    # Create a temporary directory
+    tmpdir = tempfile.mkdtemp()
+    
     for file, filename in zip(kwargs["files"], kwargs["filenames"]):
-        file_path = Path(FILE_UPLOAD_PATH) / f"{uuid.uuid4().hex}_{filename}"
+        file_path = Path(tmpdir) / f"{uuid.uuid4().hex}_{filename}"
         with file_path.open("wb") as buffer:
             buffer.write(base64.decodebytes(file.encode('utf-8')))
 
