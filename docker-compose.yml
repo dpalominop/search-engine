@@ -53,7 +53,7 @@ services:
       - DOCUMENTSTORE_PARAMS_USERNAME=elastic
       - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
       - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_indexer.yml
-      - BUCKET_NAME=document-tasks
+      - BUCKET_NAME=document-datasets
     links:
       - backend:backend
       - broker:broker
@@ -122,15 +122,18 @@ services:
     networks:
       search_engine_net:
 
-  # localstack:
-  #   image: localstack/localstack:0.12.13
-  #   environment:
-  #     SERVICES: s3
-  #     DATA_DIR: /tmp/localstack/data
-  #   volumes:
-  #     - './data/documents:/tmp/localstack/dataset'
-  #     - './localstack:/docker-entrypoint-initaws.d'
-  #   networks:
-  #     search_engine_net:
+  localstack:
+    image: localstack/localstack:0.12.13
+    environment:
+      SERVICES: s3
+      DATA_DIR: /tmp/localstack/data
+    volumes:
+      - './data/documents:/tmp/localstack/dataset'
+      - './localstack:/docker-entrypoint-initaws.d'
+    container_name: localstack
+    ports:
+      - 4566:4566
+    networks:
+      search_engine_net:
 networks:
   search_engine_net:
