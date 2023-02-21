@@ -7,6 +7,7 @@ services:
     ports:
       - 8080:15672
       - 5672:5672
+    restart: on-failure
     networks:
       search_engine_net:
 
@@ -15,6 +16,7 @@ services:
     image: redis:6.2.4
     ports:
       - 6379:6379
+    restart: on-failure
     networks:
       search_engine_net:
     command: redis-server --requirepass password
@@ -25,6 +27,8 @@ services:
     ports:
       - 9200:9200
     restart: on-failure
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
@@ -48,6 +52,7 @@ services:
     container_name: indexer
     env_file:
       - 'variables.env'
+    restart: on-failure
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=elastic
@@ -133,7 +138,13 @@ services:
     container_name: localstack
     ports:
       - 4566:4566
+    restart: on-failure
     networks:
       search_engine_net:
+
 networks:
   search_engine_net:
+
+volumes:
+  esdata:
+    driver: local
