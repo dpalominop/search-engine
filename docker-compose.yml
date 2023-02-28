@@ -22,7 +22,10 @@ services:
     command: redis-server --requirepass password
   
   elasticsearch:
-    image: "elasticsearch:7.17.6"
+    build:
+      context: elasticsearch
+      dockerfile: docker/Dockerfile
+    image: "elasticsearch-logging:7.17.6"
     container_name: elasticsearch
     ports:
       - 9200:9200
@@ -35,7 +38,7 @@ services:
       - xpack.security.enabled=true
       - ELASTIC_PASSWORD=changeme
     healthcheck:
-        test: curl --fail --user elastic:changeme http://localhost:9200/_cat/health || exit 1
+        test: python3 logging-template.py || exit 1
         interval: 10s
         timeout: 1s
         retries: 10
