@@ -89,7 +89,7 @@ services:
       - 8000:8000
     restart: on-failure
     volumes:
-      - apidata:/home/gunicorn-service/.cache:Z
+      - apidata:/home/gunicorn-service/.cache
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=elastic
