@@ -49,8 +49,10 @@ def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     
-    logger.addHandler(get_stream_handler(formatter=logging.Formatter("%(asctime)s [%(process)d] [%(levelname)s] %(message)s")))
-    logger.addHandler(get_es_handler(formatter=logging.Formatter("%(asctime)s [%(process)d] [%(levelname)s] %(message)s")))
+    logger.addHandler(get_stream_handler(formatter=logging.Formatter(fmt="%(asctime)s [%(process)d] [%(levelname)s] %(message)s",
+                                                                     datefmt="%Y-%m-%d %H:%M:%S")))
+    logger.addHandler(get_es_handler(formatter=logging.Formatter(fmt="%(asctime)s [%(process)d] [%(levelname)s] %(message)s",
+                                                                 datefmt="%Y-%m-%d %H:%M:%S")))
     return logger
 
 
