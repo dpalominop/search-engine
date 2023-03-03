@@ -75,5 +75,7 @@ class Config:
 
     BROKER_URL=os.getenv("BROKER_URL")
     REDIS_URL=os.getenv("REDIS_URL")
+    
+    GPU_CHECK = False
 
 CONFIG = Config()
