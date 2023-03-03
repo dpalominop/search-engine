@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import base64
+import logging
 from pathlib import Path
 from typing import Any, Dict, List
 import tempfile
@@ -20,7 +21,13 @@ BUCKET_NAME = os.getenv("BUCKET_NAME", "")
 S3_HOST = os.getenv("S3_HOST", "")
 
 logger = get_logger(name=__name__)
-logger.addHandler(get_es_handler())
+es_handler = get_es_handler(
+    formatter=logging.Formatter(
+        fmt="%(asctime)s [%(process)d] [%(levelname)s] %(message)s", 
+        datefmt="%Y-%m-%d %H:%M:%S"
+        )
+    )
+logger.addHandler(es_handler)
 
 indexer = Celery(
     "indexer", broker=os.getenv("BROKER_URL"), backend=os.getenv("REDIS_URL")
