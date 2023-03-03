@@ -8,15 +8,16 @@ from fastapi import FastAPI, APIRouter, UploadFile, File, Form, Depends
 from pydantic import BaseModel
 
 from src.utils import get_app
-from src.config import BROKER_URL, REDIS_URL, LOG_LEVEL
+from src.config import CONFIG
 from src.controller.utils import as_form
 
-logging.getLogger("haystack").setLevel(LOG_LEVEL)
-logger = logging.getLogger("haystack")
+
+logger = logging.getLogger("api")
+
 
 router = APIRouter()
 app: FastAPI = get_app()
-tasks = Celery(broker=BROKER_URL, backend=REDIS_URL)
+tasks = Celery(broker=CONFIG.BROKER_URL, backend=CONFIG.REDIS_URL)
 
 
 @as_form

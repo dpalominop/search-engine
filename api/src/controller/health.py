@@ -13,11 +13,10 @@ from fastapi import FastAPI, APIRouter
 import haystack
 
 from src.utils import get_app
-from src.config import LOG_LEVEL
+from src.config import CONFIG
 
-logging.getLogger("haystack").setLevel(LOG_LEVEL)
-logger = logging.getLogger("haystack")
 
+logger = logging.getLogger("api")
 
 router = APIRouter()
 app: FastAPI = get_app()
