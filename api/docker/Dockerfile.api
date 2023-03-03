@@ -31,5 +31,8 @@ RUN apt-get update -yqq && \
 
 EXPOSE 8000
 
+RUN mkdir -p /home/gunicorn-service/.cache
+RUN chown $SERVICE_NAME:$SERVICE_NAME /home/gunicorn-service/.cache
+
 USER $SERVICE_NAME
 CMD ["gunicorn", "src.application:app",  "-b", "0.0.0.0", "-k", "uvicorn.workers.UvicornWorker", "--workers", "1", "--timeout", "180"]

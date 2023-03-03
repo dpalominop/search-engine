@@ -56,6 +56,8 @@ services:
     env_file:
       - 'variables.env'
     restart: on-failure
+    volumes:
+      - indexdata:/root/.cache
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=elastic
@@ -86,6 +88,8 @@ services:
     ports:
       - 8000:8000
     restart: on-failure
+    volumes:
+      - apidata:/home/gunicorn-service/.cache:Z
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=elastic
@@ -150,4 +154,8 @@ networks:
 
 volumes:
   esdata:
+    driver: local
+  apidata:
+    driver: local
+  indexdata:
     driver: local
