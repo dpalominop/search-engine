@@ -42,7 +42,7 @@ class Response(BaseModel):
 
 
 @router.post("/file-upload")
-def upload_file(
+async def upload_file(
     files: List[UploadFile] = File(...),
     # JSON serialized string
     meta: Optional[str] = Form("null"),  # type: ignore
