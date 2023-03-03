@@ -7,20 +7,21 @@ from typing import Any, Dict, List
 import tempfile
 import s3fs
 
-from celery import Celery, states
-from celery.exceptions import Ignore
+from celery import Celery
 from celery.utils.log import get_logger
 from haystack import Pipeline
 from haystack.nodes import BaseConverter, PreProcessor
 
 from src.utils import get_pipelines
-from src.config import FILE_UPLOAD_PATH
+from src.config import get_es_handler
 
 
 BUCKET_NAME = os.getenv("BUCKET_NAME", "")
 S3_HOST = os.getenv("S3_HOST", "")
 
-logger = get_logger(__name__)
+logger = get_logger(name=__name__)
+logger.addHandler(get_es_handler())
+
 indexer = Celery(
     "indexer", broker=os.getenv("BROKER_URL"), backend=os.getenv("REDIS_URL")
 )

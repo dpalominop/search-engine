@@ -20,7 +20,6 @@ elasticsearch = Elasticsearch(
 if not elasticsearch.ping():
     logging.error('Elasticsearch is not available')
     sys.exit(1)
-    
 
 elasticsearch.indices.put_index_template(
     name="logging-template",
