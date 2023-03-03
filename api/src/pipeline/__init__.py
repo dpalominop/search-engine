@@ -11,7 +11,7 @@ from haystack.errors import PipelineConfigError
 from src.controller.utils import RequestLimiter
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api")
 
 # Each instance of FAISSDocumentStore creates an in-memory FAISS index,
 # the Indexing & Query Pipelines will end up with different indices for each worker.
@@ -43,21 +43,21 @@ def _get_pipeline_doc_store(pipeline):
 
 def setup_pipelines() -> Dict[str, Any]:
     # Re-import the configuration variables
-    from src import config  # pylint: disable=reimported
+    from src.config import CONFIG  # pylint: disable=reimported
 
     pipelines = {}
 
     # Load query pipeline & document store
-    query_pipeline, document_store = _load_pipeline(config.PIPELINE_YAML_PATH, config.QUERY_PIPELINE_NAME)
+    query_pipeline, document_store = _load_pipeline(CONFIG.PIPELINE_YAML_PATH, CONFIG.QUERY_PIPELINE_NAME)
     pipelines["query_pipeline"] = query_pipeline
     pipelines["document_store"] = document_store
 
     # Setup concurrency limiter
-    concurrency_limiter = RequestLimiter(config.CONCURRENT_REQUEST_PER_WORKER)
-    logging.info("Concurrent requests per worker: %s", config.CONCURRENT_REQUEST_PER_WORKER)
+    concurrency_limiter = RequestLimiter(CONFIG.CONCURRENT_REQUEST_PER_WORKER)
+    logging.info("Concurrent requests per worker: %s", CONFIG.CONCURRENT_REQUEST_PER_WORKER)
     pipelines["concurrency_limiter"] = concurrency_limiter
 
     # Create directory for uploaded files
-    os.makedirs(config.FILE_UPLOAD_PATH, exist_ok=True)
+    os.makedirs(CONFIG.FILE_UPLOAD_PATH, exist_ok=True)
 
     return pipelines
