@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 import numpy as np
 import pandas as pd
 
@@ -59,3 +59,10 @@ class QueryResponse(BaseModel):
     answers: List[Answer] = []
     documents: List[Document] = []
     debug: Optional[Dict] = Field(None, alias="_debug")
+
+
+class TaskResult(BaseModel):
+    id: str
+    status: str
+    error: Optional[str] = None
+    result: Optional[Any] = None

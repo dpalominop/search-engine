@@ -22,10 +22,10 @@ def get_app() -> FastAPI:
 
     from src.config import CONFIG
 
-    app = FastAPI(title="Haystack REST API", debug=True, version=haystack_version, root_path=CONFIG.ROOT_PATH)
+    app = FastAPI(title="Search Engine REST API", debug=True, version=haystack_version, root_path=CONFIG.ROOT_PATH)
 
     # Creates the router for the API calls
-    from src.controller import file_upload, search, feedback, document, health
+    from src.controller import file_upload, search, feedback, document, health, task_result
 
     router = APIRouter()
     router.include_router(search.router, tags=["search"])
@@ -33,6 +33,7 @@ def get_app() -> FastAPI:
     router.include_router(file_upload.router, tags=["file-upload"])
     router.include_router(document.router, tags=["document"])
     router.include_router(health.router, tags=["health"])
+    router.include_router(task_result.router, tags=["task-result"])
 
     # This middleware enables allow all cross-domain requests to the API from a browser. For production
     # deployments, it could be made more restrictive.
