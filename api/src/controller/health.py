@@ -13,11 +13,10 @@ from fastapi import FastAPI, APIRouter
 import haystack
 
 from src.utils import get_app
-from src.config import LOG_LEVEL
+from src.config import CONFIG
 
-logging.getLogger("haystack").setLevel(LOG_LEVEL)
-logger = logging.getLogger("haystack")
 
+logger = logging.getLogger("api")
 
 router = APIRouter()
 app: FastAPI = get_app()
@@ -72,30 +71,31 @@ def get_health_status():
 
     gpus: List[GPUInfo] = []
 
-    try:
-        pynvml.nvmlInit()
-        gpu_count = pynvml.nvmlDeviceGetCount()
-        for i in range(gpu_count):
-            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-            info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-            gpu_mem_total = float(info.total) / 1024 / 1024
-            gpu_mem_used = None
-            for proc in pynvml.nvmlDeviceGetComputeRunningProcesses(handle):
-                if proc.pid == os.getpid():
-                    gpu_mem_used = float(proc.usedGpuMemory) / 1024 / 1024
-                    break
-            gpu_info = GPUInfo(
-                index=i,
-                usage=GPUUsage(
-                    memory_total=round(gpu_mem_total),
-                    kernel_usage=pynvml.nvmlDeviceGetUtilizationRates(handle).gpu,
-                    memory_used=round(gpu_mem_used) if gpu_mem_used is not None else None,
-                ),
-            )
+    if CONFIG.GPU_CHECK:
+        try:
+            pynvml.nvmlInit()
+            gpu_count = pynvml.nvmlDeviceGetCount()
+            for i in range(gpu_count):
+                handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+                info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                gpu_mem_total = float(info.total) / 1024 / 1024
+                gpu_mem_used = None
+                for proc in pynvml.nvmlDeviceGetComputeRunningProcesses(handle):
+                    if proc.pid == os.getpid():
+                        gpu_mem_used = float(proc.usedGpuMemory) / 1024 / 1024
+                        break
+                gpu_info = GPUInfo(
+                    index=i,
+                    usage=GPUUsage(
+                        memory_total=round(gpu_mem_total),
+                        kernel_usage=pynvml.nvmlDeviceGetUtilizationRates(handle).gpu,
+                        memory_used=round(gpu_mem_used) if gpu_mem_used is not None else None,
+                    ),
+                )
 
-            gpus.append(gpu_info)
-    except pynvml.NVMLError:
-        logger.warning("No NVIDIA GPU found.")
+                gpus.append(gpu_info)
+        except pynvml.NVMLError:
+            logger.warning("No NVIDIA GPU found.")
 
     p_cpu_usage = 0
     p_memory_usage = 0

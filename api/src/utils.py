@@ -20,9 +20,9 @@ def get_app() -> FastAPI:
     if app:
         return app
 
-    from src.config import ROOT_PATH
+    from src.config import CONFIG
 
-    app = FastAPI(title="Haystack REST API", debug=True, version=haystack_version, root_path=ROOT_PATH)
+    app = FastAPI(title="Haystack REST API", debug=True, version=haystack_version, root_path=CONFIG.ROOT_PATH)
 
     # Creates the router for the API calls
     from src.controller import file_upload, search, feedback, document, health

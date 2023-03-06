@@ -12,13 +12,11 @@ from haystack import Pipeline
 from haystack.telemetry import send_event_if_public_demo
 
 from src.utils import get_app, get_pipelines
-from src.config import LOG_LEVEL
+from src.config import CONFIG
 from src.schema import QueryRequest, QueryResponse
 
 
-logging.getLogger("haystack").setLevel(LOG_LEVEL)
-logger = logging.getLogger("haystack")
-
+logger = logging.getLogger("api")
 
 BaseConfig.arbitrary_types_allowed = True
 

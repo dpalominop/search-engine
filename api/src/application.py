@@ -1,14 +1,9 @@
-import logging
-
 import uvicorn
 from src.utils import get_app, get_pipelines
+from src.config import get_logger
 
 
-logging.basicConfig(format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p")
-logger = logging.getLogger(__name__)
-logging.getLogger("elasticsearch").setLevel(logging.WARNING)
-logging.getLogger("haystack").setLevel(logging.INFO)
-
+logger = get_logger(name="api")
 
 app = get_app()
 pipelines = get_pipelines()  # Unused here, called to init the pipelines early

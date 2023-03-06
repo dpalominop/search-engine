@@ -7,6 +7,7 @@ services:
     ports:
       - 8080:15672
       - 5672:5672
+    restart: on-failure
     networks:
       search_engine_net:
 
@@ -15,16 +16,22 @@ services:
     image: redis:6.2.4
     ports:
       - 6379:6379
+    restart: on-failure
     networks:
       search_engine_net:
     command: redis-server --requirepass password
   
   elasticsearch:
-    image: "elasticsearch:7.17.6"
+    build:
+      context: elasticsearch
+      dockerfile: docker/Dockerfile
+    image: "elasticsearch-logging:7.17.6"
     container_name: elasticsearch
     ports:
       - 9200:9200
     restart: on-failure
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
@@ -48,12 +55,15 @@ services:
     container_name: indexer
     env_file:
       - 'variables.env'
+    restart: on-failure
+    volumes:
+      - indexdata:/root/.cache
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=elastic
       - DOCUMENTSTORE_PARAMS_PASSWORD=changeme
       - PIPELINE_YAML_PATH=/app/src/pipeline/pipelines_indexer.yml
-      - BUCKET_NAME=document-tasks
+      - BUCKET_NAME=document-datasets
     links:
       - backend:backend
       - broker:broker
@@ -78,6 +88,8 @@ services:
     ports:
       - 8000:8000
     restart: on-failure
+    volumes:
+      - apidata:/home/gunicorn-service/.cache
     environment:
       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
       - DOCUMENTSTORE_PARAMS_USERNAME=elastic
@@ -122,15 +134,28 @@ services:
     networks:
       search_engine_net:
 
-  # localstack:
-  #   image: localstack/localstack:0.12.13
-  #   environment:
-  #     SERVICES: s3
-  #     DATA_DIR: /tmp/localstack/data
-  #   volumes:
-  #     - './data/documents:/tmp/localstack/dataset'
-  #     - './localstack:/docker-entrypoint-initaws.d'
-  #   networks:
-  #     search_engine_net:
+  localstack:
+    image: localstack/localstack:1.4
+    environment:
+      SERVICES: s3
+      DATA_DIR: /tmp/localstack/data
+    volumes:
+      - './data/documents:/tmp/localstack/dataset'
+      - './localstack:/docker-entrypoint-initaws.d'
+    container_name: localstack
+    ports:
+      - 4566:4566
+    restart: on-failure
+    networks:
+      search_engine_net:
+
 networks:
   search_engine_net:
+
+volumes:
+  esdata:
+    driver: local
+  apidata:
+    driver: local
+  indexdata:
+    driver: local

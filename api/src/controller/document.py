@@ -7,12 +7,11 @@ from haystack.document_stores import BaseDocumentStore
 from haystack.schema import Document
 
 from src.utils import get_app, get_pipelines
-from src.config import LOG_LEVEL
+from src.config import CONFIG
 from src.schema import FilterRequest
 
 
-logging.getLogger("haystack").setLevel(LOG_LEVEL)
-logger = logging.getLogger("haystack")
+logger = logging.getLogger("api")
 
 
 router = APIRouter()

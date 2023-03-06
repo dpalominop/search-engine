@@ -1,4 +1,2 @@
 celery[redis, librabbitmq]==4.4.0
-# Fix s3fs regression
-# See https://github.com/fsspec/s3fs/issues/514.
-s3fs==2021.08.0
+CMRESHandler==1.0.0

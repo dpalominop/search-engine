@@ -10,7 +10,7 @@ from src.schema import FilterRequest, CreateLabelSerialized
 from src.utils import get_app, get_pipelines
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api")
 
 router = APIRouter()
 app: FastAPI = get_app()
