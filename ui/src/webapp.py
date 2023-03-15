@@ -197,7 +197,8 @@ def main():
                         source = f"[{result['document']['meta']['title']}]({result['document']['meta']['url']})"
                     else:
                         source = f"{result['source']}"
-                    st.markdown(f"**Relevance:** {result['relevance']} -  **Source:** {source}")
+                    page = result["page"]
+                    st.markdown(f"**Relevance:** {result['relevance']} -  **Source:** {source} -  **Page:** {page}")
 
             else:
                 st.info(

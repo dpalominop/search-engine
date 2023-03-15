@@ -70,6 +70,7 @@ def query(query, filters={}, top_k_reader=5, top_k_retriever=5) -> Tuple[List[Di
                     "context": f'... {answer["context"]} ...' if answer.get("context", None) else None,
                     "answer": answer.get("answer", None),
                     "source": answer["meta"].get("name", None),
+                    "page": answer["meta"].get("page", None),
                     "relevance": round(answer["score"] * 100, 2) if answer.get("score", None) else None,
                     "document": [doc for doc in response["documents"] if doc["id"] == answer.get("document_id", None)],
                     #"offset_start_in_doc": answer["offsets_in_document"][0]["start"],
