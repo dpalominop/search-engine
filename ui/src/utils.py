@@ -16,6 +16,7 @@ HS_VERSION = "hs_version"
 DOC_REQUEST = "query"
 DOC_FEEDBACK = "feedback"
 DOC_UPLOAD = "file-upload"
+TASK_RESULTS = "task"
 
 
 def haystack_is_ready():
@@ -110,6 +111,12 @@ def upload_doc(file):
     url = f"{API_ENDPOINT}/{DOC_UPLOAD}"
     files = [("files", file)]
     response = requests.post(url, files=files).json()
+    return response
+
+
+def get_task_result(task_id):
+    url = f"{API_ENDPOINT}/{TASK_RESULTS}/{task_id}"
+    response = requests.get(url).json()
     return response
 
 
