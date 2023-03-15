@@ -172,22 +172,32 @@ def main():
         st.write("## Results:")
 
         for count, result in enumerate(st.session_state.results):
+            
             if result["answer"]:
                 answer, context = result["answer"], result["context"]
-                start_idx = context.find(answer)
-                end_idx = start_idx + len(answer)
-                # Hack due to this bug: https://github.com/streamlit/streamlit/issues/3190
-                st.write(
-                    markdown(context[:start_idx] + str(annotation(answer, "ANSWER", "#8ef")) + context[end_idx:]),
-                    unsafe_allow_html=True,
-                )
-                source = ""
-                url, title = get_backlink(result)
-                if url and title:
-                    source = f"[{result['document']['meta']['title']}]({result['document']['meta']['url']})"
+
+                if result["context"]:
+                    start_idx = context.find(answer)
+                    end_idx = start_idx + len(answer)
+                    # Hack due to this bug: https://github.com/streamlit/streamlit/issues/3190
+                    st.write(
+                        markdown(context[:start_idx] + str(annotation(answer, "ANSWER", "#8ef")) + context[end_idx:]),
+                        unsafe_allow_html=True,
+                    )
                 else:
-                    source = f"{result['source']}"
-                st.markdown(f"**Relevance:** {result['relevance']} -  **Source:** {source}")
+                    st.write(
+                        markdown(str(annotation(answer, "ANSWER", "#8ef"))),
+                        unsafe_allow_html=True,
+                    )
+                    
+                if result["relevance"]:
+                    source = ""
+                    url, title = get_backlink(result)
+                    if url and title:
+                        source = f"[{result['document']['meta']['title']}]({result['document']['meta']['url']})"
+                    else:
+                        source = f"{result['source']}"
+                    st.markdown(f"**Relevance:** {result['relevance']} -  **Source:** {source}")
 
             else:
                 st.info(

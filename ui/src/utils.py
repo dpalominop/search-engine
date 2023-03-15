@@ -67,12 +67,12 @@ def query(query, filters={}, top_k_reader=5, top_k_retriever=5) -> Tuple[List[Di
         if answer.get("answer", None):
             results.append(
                 {
-                    "context": "..." + answer["context"] + "...",
+                    "context": f'... {answer["context"]} ...' if answer.get("context", None) else None,
                     "answer": answer.get("answer", None),
-                    "source": answer["meta"]["name"],
-                    "relevance": round(answer["score"] * 100, 2),
-                    "document": [doc for doc in response["documents"] if doc["id"] == answer["document_id"]][0],
-                    "offset_start_in_doc": answer["offsets_in_document"][0]["start"],
+                    "source": answer["meta"].get("name", None),
+                    "relevance": round(answer["score"] * 100, 2) if answer.get("score", None) else None,
+                    "document": [doc for doc in response["documents"] if doc["id"] == answer.get("document_id", None)],
+                    #"offset_start_in_doc": answer["offsets_in_document"][0]["start"],
                     "_raw": answer,
                 }
             )
@@ -82,7 +82,7 @@ def query(query, filters={}, top_k_reader=5, top_k_retriever=5) -> Tuple[List[Di
                     "context": None,
                     "answer": None,
                     "document": None,
-                    "relevance": round(answer["score"] * 100, 2),
+                    "relevance": round(answer.get("score", 0) * 100, 2),
                     "_raw": answer,
                 }
             )
