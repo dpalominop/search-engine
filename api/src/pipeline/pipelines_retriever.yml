@@ -18,6 +18,13 @@ components:    # define all the building-blocks for Pipeline
       model_name_or_path: deepset/roberta-base-squad2
       context_window_size: 512
       return_no_answer: true
+  # - name: Reader       # custom-name for the component; helpful for visualization & debugging
+  #   type: OpenAIAnswerGenerator    # Haystack Class name for the component
+  #   params:
+  #     model: text-davinci-003
+  #     api_key: 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
+  #     temperature: 0.5
+  #     max_tokens: 80
 
 pipelines:
   - name: query    # a sample extractive-qa Pipeline
